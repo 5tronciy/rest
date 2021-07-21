@@ -1,7 +1,9 @@
-const { showTables } = require("./services/db");
+const { showTables, tableMeta, rowById } = require("./services/db");
 
-showTables();
+const handler = (data) => console.log(data);
 
-// tableMeta("instructor");
+showTables(handler);
 
-// rowById("instructor", 76766);
+tableMeta("instructor", handler);
+
+rowById("instructor", 76766, handler);
