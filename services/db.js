@@ -4,16 +4,18 @@ const config = require("../config");
 const connection = mysql.createConnection(config.db);
 
 const showTables = (callback) => {
-  connection.connect();
-  connection.query("SHOW TABLES;", (error, results) => {
+  const result = [];
+  connection.connect((error) => {
     if (error) throw error;
-    const result = [];
-    for (let i = 0; i < results.length; i++) {
-      result.push(results[i]["Tables_in_" + process.env.DATABASE]);
-    }
-    callback(result);
+    connection.query("SHOW TABLES;", (error, results) => {
+      connection.end();
+      if (error) throw error;
+      for (let i = 0; i < results.length; i++) {
+        result.push(results[i]["Tables_in_" + process.env.DATABASE]);
+      }
+      callback(result);
+    });
   });
-  connection.end();
 };
 
 const tableMeta = (tableName, callback) => {
