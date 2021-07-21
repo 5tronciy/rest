@@ -5,7 +5,7 @@ const connection = mysql.createConnection(config.db);
 
 const showTables = (callback) => {
   connection.connect();
-  connection.query("SHOW TABLES;", function (error, results, fields) {
+  connection.query("SHOW TABLES;", (error, results) => {
     if (error) throw error;
     const result = [];
     for (let i = 0; i < results.length; i++) {
@@ -18,7 +18,7 @@ const showTables = (callback) => {
 
 const tableMeta = (tableName, callback) => {
   connection.connect();
-  connection.query("DESCRIBE " + tableName, function (error, results, fields) {
+  connection.query("DESCRIBE " + tableName, (error, results) => {
     if (error) throw error;
     const result = [];
     for (let i = 0; i < results.length; i++) {
@@ -34,7 +34,7 @@ const rowById = (tableName, id, callback) => {
   connection.query(
     "SELECT * FROM " + tableName + " WHERE id=?",
     [id],
-    function (error, results, fields) {
+    (error, results) => {
       if (error) throw error;
       const result = { ...results[0] };
       callback(result);

@@ -8,8 +8,8 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-app.get("/app/rest/metadata", async (req, res) => {
-  const tables = await showTables();
+app.get("/app/rest/metadata", (req, res) => {
+  const tables = showTables();
   res.send(tables);
 });
 
