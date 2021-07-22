@@ -45,4 +45,27 @@ const rowById = (tableName, id, callback) => {
   connection.end();
 };
 
-module.exports = { showTables, tableMeta, rowById };
+const addRow = (tableName, data, callback) => {
+  console.log(data);
+  connection.connect();
+
+  // -- Get fields --
+  connection.query("DESCRIBE " + tableName, (error, results) => {
+    if (error) throw error;
+    const result = [];
+    for (let i = 0; i < results.length; i++) {
+      result.push(results[i].Field);
+    }
+    console.log(result.join(" ,"));
+  });
+  // -- /Get fields --
+
+  const sql = "INSERT INTO " + tableName + " (ID, name) VALUES ?";
+  connection.query(sql, [data], (error, results) => {
+    if (error) throw error;
+    callback("Number of records inserted: " + results.affectedRows);
+  });
+  connection.end();
+};
+
+module.exports = { showTables, tableMeta, rowById, addRow };
