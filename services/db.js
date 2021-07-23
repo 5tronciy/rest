@@ -57,6 +57,7 @@ const rowById = (tableName, id, callback) => {
 const addRow = (tableName, data, callback) => {
   connection.connect((error) => {
     if (error) throw error;
+
     const template = [];
     const dataKeys = [];
     const dataValues = [];
@@ -76,11 +77,10 @@ const addRow = (tableName, data, callback) => {
       ") VALUES (" +
       queryTemplate +
       ")";
-    console.log(sql);
     connection.query(sql, dataValues, (error, results, fields) => {
       if (error) throw error;
       connection.end();
-      callback(data);
+      callback(results.insertId);
     });
   });
 };
