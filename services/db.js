@@ -1,6 +1,7 @@
 require("dotenv").config();
 const mysql = require("mysql");
 const config = require("../config");
+const { convertToJSType } = require("./utils");
 const connection = mysql.createConnection(config.db);
 
 const showTables = (callback) => {
@@ -8,64 +9,80 @@ const showTables = (callback) => {
   connection.connect((error) => {
     if (error) throw error;
     connection.query("SHOW TABLES;", (error, results) => {
-      connection.end();
       if (error) throw error;
       for (let i = 0; i < results.length; i++) {
-        result.push(results[i]["Tables_in_" + process.env.DATABASE]);
+        result.push(Object.values(results[i])[0]);
       }
+      connection.end();
       callback(result);
     });
   });
 };
 
 const tableMeta = (tableName, callback) => {
-  connection.connect();
-  connection.query("DESCRIBE " + tableName, (error, results) => {
+  connection.connect((error) => {
     if (error) throw error;
-    const result = [];
-    for (let i = 0; i < results.length; i++) {
-      result.push(results[i].Field + ": " + results[i].Type);
-    }
-    callback(result);
+    connection.query("DESCRIBE " + tableName, (error, results, fields) => {
+      if (error) throw error;
+      const result = {};
+      for (let i = 0; i < results.length; i++) {
+        const field = results[i].Field;
+        result[field] = convertToJSType(results[i].Type);
+      }
+      connection.end();
+      callback(result);
+    });
   });
-  connection.end();
 };
 
 const rowById = (tableName, id, callback) => {
-  connection.connect();
-  connection.query(
-    "SELECT * FROM " + tableName + " WHERE id=?",
-    [id],
-    (error, results) => {
-      if (error) throw error;
-      const result = { ...results[0] };
-      callback(result);
-    }
-  );
-  connection.end();
+  connection.connect((error) => {
+    if (error) throw error;
+    connection.query(
+      "SELECT * FROM " + tableName + " WHERE id=?",
+      [id],
+      (error, results, fields) => {
+        if (error) throw error;
+        const row = {};
+        for (let key in results[0]) {
+          row[key] = results[0][key];
+        }
+        connection.end();
+        callback(row);
+      }
+    );
+  });
 };
 
 const addRow = (tableName, data, callback) => {
-  console.log(data);
-  connection.connect();
-
-  // -- Get fields --
-  connection.query("DESCRIBE " + tableName, (error, results) => {
+  connection.connect((error) => {
     if (error) throw error;
-    const result = [];
-    for (let i = 0; i < results.length; i++) {
-      result.push(results[i].Field);
+    const template = [];
+    const dataKeys = [];
+    const dataValues = [];
+    for (let key in data) {
+      template.push("?");
+      dataKeys.push(key);
+      dataValues.push(data[key]);
     }
-    console.log(result.join(" ,"));
-  });
-  // -- /Get fields --
+    const queryTemplate = template.join(", ");
+    const tableNames = dataKeys.join(", ");
 
-  const sql = "INSERT INTO " + tableName + " (ID, name) VALUES ?";
-  connection.query(sql, [data], (error, results) => {
-    if (error) throw error;
-    callback("Number of records inserted: " + results.affectedRows);
+    const sql =
+      "INSERT INTO " +
+      tableName +
+      " (" +
+      tableNames +
+      ") VALUES (" +
+      queryTemplate +
+      ")";
+    console.log(sql);
+    connection.query(sql, dataValues, (error, results, fields) => {
+      if (error) throw error;
+      connection.end();
+      callback(data);
+    });
   });
-  connection.end();
 };
 
 module.exports = { showTables, tableMeta, rowById, addRow };
