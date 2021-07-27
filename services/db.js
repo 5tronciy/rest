@@ -4,7 +4,7 @@ const config = require("../config");
 const { convertToJSType } = require("./utils");
 const connection = mysql.createConnection(config.db);
 
-const showTables = (callback) => {
+const getMetadata = (callback) => {
   const result = [];
   connection.connect((error) => {
     if (error) throw error;
@@ -19,10 +19,10 @@ const showTables = (callback) => {
   });
 };
 
-const tableMeta = (tableName, callback) => {
+const getTableMetadata = (table, callback) => {
   connection.connect((error) => {
     if (error) throw error;
-    connection.query("DESCRIBE " + tableName, (error, results, fields) => {
+    connection.query("DESCRIBE " + table, (error, results, fields) => {
       if (error) throw error;
       const result = {};
       for (let i = 0; i < results.length; i++) {
@@ -35,18 +35,18 @@ const tableMeta = (tableName, callback) => {
   });
 };
 
-const rowById = (tableName, id, callback) => {
+const getAll = (table, callback) => {};
+
+const getById = (table, id, callback) => {
   connection.connect((error) => {
     if (error) throw error;
     connection.query(
-      "SELECT * FROM " + tableName + " WHERE id=?",
+      "SELECT * FROM " + table + " WHERE id=?",
       [id],
       (error, results, fields) => {
         if (error) throw error;
         const row = {};
-        for (let key in results[0]) {
-          row[key] = results[0][key];
-        }
+        fields.map((field) => (row[field.name] = results[0][field.name]));
         connection.end();
         callback(row);
       }
@@ -54,30 +54,21 @@ const rowById = (tableName, id, callback) => {
   });
 };
 
-const addRow = (tableName, data, callback) => {
+const create = (table, obj, callback) => {
   connection.connect((error) => {
     if (error) throw error;
-
     const template = [];
     const dataKeys = [];
     const dataValues = [];
-    for (let key in data) {
+    for (let key in obj) {
       template.push("?");
       dataKeys.push(key);
-      dataValues.push(data[key]);
+      dataValues.push(obj[key]);
     }
-    const queryTemplate = template.join(", ");
-    const tableNames = dataKeys.join(", ");
-
-    const sql =
-      "INSERT INTO " +
-      tableName +
-      " (" +
-      tableNames +
-      ") VALUES (" +
-      queryTemplate +
-      ")";
-    connection.query(sql, dataValues, (error, results, fields) => {
+    const sql = `INSERT INTO ${table} (${dataKeys.join(
+      ", "
+    )}) VALUES (${template.join(", ")})`;
+    connection.query(sql, dataValues, (error, results) => {
       if (error) throw error;
       connection.end();
       callback(results.insertId);
@@ -85,4 +76,16 @@ const addRow = (tableName, data, callback) => {
   });
 };
 
-module.exports = { showTables, tableMeta, rowById, addRow };
+const updateById = (table, id, obj, callback) => {};
+
+const deleteById = (table, id, callback) => {};
+
+module.exports = {
+  getMetadata,
+  getTableMetadata,
+  getAll,
+  getById,
+  create,
+  updateById,
+  deleteById,
+};
