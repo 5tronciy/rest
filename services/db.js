@@ -35,7 +35,20 @@ const getTableMetadata = (table, callback) => {
   });
 };
 
-const getAll = (table, callback) => {};
+const getAll = (table, callback) => {
+  connection.connect((error) => {
+    if (error) throw error;
+    connection.query(`SELECT * FROM ${table}`, (error, results, fields) => {
+      if (error) throw error;
+      const rows = [];
+      for (let row in results) {
+        rows.push({ ...results[row] });
+      }
+      connection.end();
+      callback(rows);
+    });
+  });
+};
 
 const getById = (table, id, callback) => {
   connection.connect((error) => {
