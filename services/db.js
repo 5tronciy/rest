@@ -89,7 +89,24 @@ const create = (table, obj, callback) => {
   });
 };
 
-const updateById = (table, id, obj, callback) => {};
+const updateById = (table, id, obj, callback) => {
+  connection.connect((error) => {
+    if (error) throw error;
+    let changes = "";
+    for (let key in obj) {
+      changes += `${key} = '${obj[key]}', `;
+    }
+    const sql = `UPDATE ${table} SET ${changes.slice(
+      0,
+      changes.length - 2
+    )} WHERE id=?`;
+    connection.query(sql, [id], (error, results, fields) => {
+      if (error) throw error;
+      connection.end();
+      callback(results.message);
+    });
+  });
+};
 
 const deleteById = (table, id, callback) => {};
 
