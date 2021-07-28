@@ -7,6 +7,7 @@ const {
   getTableMetadata,
   getAll,
   getById,
+  create,
 } = require("./services/db");
 
 app.use(express.json());
@@ -39,6 +40,14 @@ app.get("/rest/:table/:id", (req, res) => {
   const { table, id } = req.params;
   getById(table, id, (row) => {
     res.send(JSON.stringify(row));
+  });
+});
+
+app.post("/rest/:table", async (req, res) => {
+  const { table } = req.params;
+  const obj = req.body;
+  await create(table, obj, (msg) => {
+    res.send(JSON.stringify(msg));
   });
 });
 
