@@ -5,9 +5,9 @@ const { convertToJSType } = require("./utils");
 const connection = mysql.createConnection(config.db);
 
 const getMetadata = (callback) => {
-  const result = [];
   connection.connect((error) => {
     if (error) throw error;
+    const result = [];
     const sql = "SHOW TABLES;";
     connection.query(sql, (error, results) => {
       if (error) throw error;
@@ -108,7 +108,17 @@ const updateById = (table, id, obj, callback) => {
   });
 };
 
-const deleteById = (table, id, callback) => {};
+const deleteById = (table, id, callback) => {
+  connection.connect((error) => {
+    if (error) throw error;
+    const sql = `DELETE FROM ${table} WHERE id = ?;`;
+    connection.query(sql, [id], (error, results) => {
+      if (error) throw error;
+      connection.end();
+      callback(`deleted rows: ${results.affectedRows}`);
+    });
+  });
+};
 
 module.exports = {
   getMetadata,
