@@ -8,7 +8,8 @@ const getMetadata = (callback) => {
   const result = [];
   connection.connect((error) => {
     if (error) throw error;
-    connection.query("SHOW TABLES;", (error, results) => {
+    const sql = "SHOW TABLES;";
+    connection.query(sql, (error, results) => {
       if (error) throw error;
       for (let i = 0; i < results.length; i++) {
         result.push(Object.values(results[i])[0]);
@@ -22,7 +23,8 @@ const getMetadata = (callback) => {
 const getTableMetadata = (table, callback) => {
   connection.connect((error) => {
     if (error) throw error;
-    connection.query("DESCRIBE " + table, (error, results, fields) => {
+    const sql = `DESCRIBE ${table};`;
+    connection.query(sql, (error, results, fields) => {
       if (error) throw error;
       const result = {};
       for (let i = 0; i < results.length; i++) {
@@ -38,7 +40,8 @@ const getTableMetadata = (table, callback) => {
 const getAll = (table, callback) => {
   connection.connect((error) => {
     if (error) throw error;
-    connection.query(`SELECT * FROM ${table}`, (error, results, fields) => {
+    const sql = `SELECT * FROM ${table};`;
+    connection.query(sql, (error, results, fields) => {
       if (error) throw error;
       const rows = [];
       for (let row in results) {
@@ -53,17 +56,14 @@ const getAll = (table, callback) => {
 const getById = (table, id, callback) => {
   connection.connect((error) => {
     if (error) throw error;
-    connection.query(
-      "SELECT * FROM " + table + " WHERE id=?",
-      [id],
-      (error, results, fields) => {
-        if (error) throw error;
-        const row = {};
-        fields.map((field) => (row[field.name] = results[0][field.name]));
-        connection.end();
-        callback(row);
-      }
-    );
+    const sql = `SELECT * FROM ${table} WHERE id=?;`;
+    connection.query(sql, [id], (error, results, fields) => {
+      if (error) throw error;
+      const row = {};
+      fields.map((field) => (row[field.name] = results[0][field.name]));
+      connection.end();
+      callback(row);
+    });
   });
 };
 
@@ -80,7 +80,7 @@ const create = (table, obj, callback) => {
     }
     const sql = `INSERT INTO ${table} (${dataKeys.join(
       ", "
-    )}) VALUES (${template.join(", ")})`;
+    )}) VALUES (${template.join(", ")});`;
     connection.query(sql, dataValues, (error, results) => {
       if (error) throw error;
       connection.end();
@@ -99,7 +99,7 @@ const updateById = (table, id, obj, callback) => {
     const sql = `UPDATE ${table} SET ${changes.slice(
       0,
       changes.length - 2
-    )} WHERE id=?`;
+    )} WHERE id=?;`;
     connection.query(sql, [id], (error, results, fields) => {
       if (error) throw error;
       connection.end();
