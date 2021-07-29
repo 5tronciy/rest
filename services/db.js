@@ -2,9 +2,9 @@ require("dotenv").config();
 const mysql = require("mysql");
 const config = require("../config");
 const { convertToJSType } = require("./utils");
-const connection = mysql.createConnection(config.db);
 
 const getMetadata = (callback) => {
+  const connection = mysql.createConnection(config.db);
   connection.connect((error) => {
     if (error) throw error;
     const result = [];
@@ -21,6 +21,7 @@ const getMetadata = (callback) => {
 };
 
 const getTableMetadata = (table, callback) => {
+  const connection = mysql.createConnection(config.db);
   connection.connect((error) => {
     if (error) throw error;
     const sql = `DESCRIBE ${table};`;
@@ -38,6 +39,7 @@ const getTableMetadata = (table, callback) => {
 };
 
 const getAll = (table, callback) => {
+  const connection = mysql.createConnection(config.db);
   connection.connect((error) => {
     if (error) throw error;
     const sql = `SELECT * FROM ${table};`;
@@ -54,6 +56,7 @@ const getAll = (table, callback) => {
 };
 
 const getById = (table, id, callback) => {
+  const connection = mysql.createConnection(config.db);
   connection.connect((error) => {
     if (error) throw error;
     const sql = `SELECT * FROM ${table} WHERE id=?;`;
@@ -68,6 +71,7 @@ const getById = (table, id, callback) => {
 };
 
 const create = (table, obj, callback) => {
+  const connection = mysql.createConnection(config.db);
   connection.connect((error) => {
     if (error) throw error;
     const template = [];
@@ -90,6 +94,7 @@ const create = (table, obj, callback) => {
 };
 
 const updateById = (table, id, obj, callback) => {
+  const connection = mysql.createConnection(config.db);
   connection.connect((error) => {
     if (error) throw error;
     let changes = "";
@@ -109,6 +114,7 @@ const updateById = (table, id, obj, callback) => {
 };
 
 const deleteById = (table, id, callback) => {
+  const connection = mysql.createConnection(config.db);
   connection.connect((error) => {
     if (error) throw error;
     const sql = `DELETE FROM ${table} WHERE id = ?;`;
