@@ -4,6 +4,8 @@ const {
   getAll,
   getById,
   create,
+  updateById,
+  deleteById,
 } = require("../services/db");
 
 class Controller {
@@ -11,7 +13,7 @@ class Controller {
     try {
       res.status(200).json("Server is working...");
     } catch (e) {
-      res.status(500).json(e);
+      res.status(500).json(e.message);
     }
   }
 
@@ -21,19 +23,18 @@ class Controller {
         res.send(JSON.stringify(tables));
       });
     } catch (e) {
-      res.status(500).json(e);
+      res.status(500).json(e.message);
     }
   }
 
   async getTableMetadata(req, res) {
     try {
       const { table } = req.params;
-      console.log(table);
       await getTableMetadata(table, (metadata) => {
         res.send(JSON.stringify(metadata));
       });
     } catch (e) {
-      res.status(500).json(e);
+      res.status(500).json(e.message);
     }
   }
 
@@ -44,7 +45,7 @@ class Controller {
         res.send(JSON.stringify(data));
       });
     } catch (e) {
-      res.status(500).json(e);
+      res.status(500).json(e.message);
     }
   }
 
@@ -55,7 +56,7 @@ class Controller {
         res.send(JSON.stringify(row));
       });
     } catch (e) {
-      res.status(500).json(e);
+      res.status(500).json(e.message);
     }
   }
 
@@ -67,7 +68,30 @@ class Controller {
         res.send(JSON.stringify(msg));
       });
     } catch (e) {
-      res.status(500).json(e);
+      res.status(500).json(e.message);
+    }
+  }
+
+  async updateById(req, res) {
+    try {
+      const { table, id } = req.params;
+      const obj = req.body;
+      await updateById(table, id, obj, (msg) => {
+        res.send(JSON.stringify(msg));
+      });
+    } catch (e) {
+      res.status(500).json(e.message);
+    }
+  }
+
+  async deleteById(req, res) {
+    try {
+      const { table, id } = req.params;
+      await deleteById(table, id, (msg) => {
+        res.send(JSON.stringify(msg));
+      });
+    } catch (e) {
+      res.status(500).json(e.message);
     }
   }
 }

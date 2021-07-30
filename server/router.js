@@ -8,5 +8,7 @@ router.get("/:table/metadata", restController.getTableMetadata);
 router.get("/:table", restController.getAll);
 router.get("/:table/:id", restController.getById);
 router.post("/:table", restController.create);
+router.post("/:table/:id", restController.updateById);
+router.delete("/:table/:id", restController.deleteById);
 
 module.exports = router;
