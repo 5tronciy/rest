@@ -11,6 +11,7 @@ const {
 class Controller {
   start(req, res) {
     try {
+      res.set("Content-Type", "text/plain");
       res.status(200).json("Server is working...");
     } catch (e) {
       res.status(500).json(e.message);
@@ -20,6 +21,7 @@ class Controller {
   getMetaData(req, res) {
     try {
       getMetadata((tables) => {
+        res.set("Content-Type", "application/json");
         res.send(JSON.stringify(tables));
       });
     } catch (e) {
@@ -31,6 +33,7 @@ class Controller {
     try {
       const { table } = req.params;
       getTableMetadata(table, (metadata) => {
+        res.set("Content-Type", "application/json");
         res.send(JSON.stringify(metadata));
       });
     } catch (e) {
@@ -42,6 +45,7 @@ class Controller {
     try {
       const { table } = req.params;
       getAll(table, (data) => {
+        res.set("Content-Type", "application/json");
         res.send(JSON.stringify(data));
       });
     } catch (e) {
@@ -53,6 +57,7 @@ class Controller {
     try {
       const { table, id } = req.params;
       getById(table, id, req.query.include, (row) => {
+        res.set("Content-Type", "application/json");
         res.send(JSON.stringify(row));
       });
     } catch (e) {
@@ -64,8 +69,9 @@ class Controller {
     try {
       const { table } = req.params;
       const obj = req.body;
-      create(table, obj, (msg) => {
-        res.send(JSON.stringify(msg));
+      create(table, obj, (id) => {
+        res.set("Content-Type", "text/plain");
+        res.send(JSON.stringify(id));
       });
     } catch (e) {
       res.status(500).json(e.message);
@@ -77,6 +83,7 @@ class Controller {
       const { table, id } = req.params;
       const obj = req.body;
       updateById(table, id, obj, (msg) => {
+        res.set("Content-Type", "text/plain");
         res.send(JSON.stringify(msg));
       });
     } catch (e) {
@@ -88,6 +95,7 @@ class Controller {
     try {
       const { table, id } = req.params;
       deleteById(table, id, (msg) => {
+        res.set("Content-Type", "text/plain");
         res.send(JSON.stringify(msg));
       });
     } catch (e) {
