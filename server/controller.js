@@ -17,9 +17,9 @@ class Controller {
     }
   }
 
-  async getMetaData(req, res) {
+  getMetaData(req, res) {
     try {
-      await getMetadata((tables) => {
+      getMetadata((tables) => {
         res.send(JSON.stringify(tables));
       });
     } catch (e) {
@@ -27,10 +27,10 @@ class Controller {
     }
   }
 
-  async getTableMetadata(req, res) {
+  getTableMetadata(req, res) {
     try {
       const { table } = req.params;
-      await getTableMetadata(table, (metadata) => {
+      getTableMetadata(table, (metadata) => {
         res.send(JSON.stringify(metadata));
       });
     } catch (e) {
@@ -38,10 +38,10 @@ class Controller {
     }
   }
 
-  async getAll(req, res) {
+  getAll(req, res) {
     try {
       const { table } = req.params;
-      await getAll(table, (data) => {
+      getAll(table, (data) => {
         res.send(JSON.stringify(data));
       });
     } catch (e) {
@@ -49,10 +49,10 @@ class Controller {
     }
   }
 
-  async getById(req, res) {
+  getById(req, res) {
     try {
       const { table, id } = req.params;
-      await getById(table, id, (row) => {
+      getById(table, id, req.query.include, (row) => {
         res.send(JSON.stringify(row));
       });
     } catch (e) {
@@ -60,11 +60,11 @@ class Controller {
     }
   }
 
-  async create(req, res) {
+  create(req, res) {
     try {
       const { table } = req.params;
       const obj = req.body;
-      await create(table, obj, (msg) => {
+      create(table, obj, (msg) => {
         res.send(JSON.stringify(msg));
       });
     } catch (e) {
@@ -72,11 +72,11 @@ class Controller {
     }
   }
 
-  async updateById(req, res) {
+  updateById(req, res) {
     try {
       const { table, id } = req.params;
       const obj = req.body;
-      await updateById(table, id, obj, (msg) => {
+      updateById(table, id, obj, (msg) => {
         res.send(JSON.stringify(msg));
       });
     } catch (e) {
@@ -84,10 +84,10 @@ class Controller {
     }
   }
 
-  async deleteById(req, res) {
+  deleteById(req, res) {
     try {
       const { table, id } = req.params;
-      await deleteById(table, id, (msg) => {
+      deleteById(table, id, (msg) => {
         res.send(JSON.stringify(msg));
       });
     } catch (e) {
