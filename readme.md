@@ -2,7 +2,7 @@
 
 - getMetadata(callback)  
   **endpoint:**  
-  `/rest/metadata`
+  `/rest/metadata`  
   **method:**  
   `GET`
 
@@ -10,7 +10,7 @@
   **endpoint:**  
   `/rest/{table}/metadata`  
   **example:**  
-  `/rest/player/metadata`
+  `/rest/player/metadata`  
   **method:**  
   `GET`
 
