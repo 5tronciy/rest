@@ -55,18 +55,41 @@ const getAll = (table, callback) => {
   });
 };
 
-const getById = (table, id, callback) => {
+const getById = (table, id, include, callback) => {
   const connection = mysql.createConnection(config.db);
   connection.connect((error) => {
     if (error) throw error;
-    const sql = `SELECT * FROM ${table} WHERE id=?;`;
-    connection.query(sql, [id], (error, results, fields) => {
-      if (error) throw error;
-      const row = {};
-      fields.map((field) => (row[field.name] = results[0][field.name]));
-      connection.end();
-      callback(row);
-    });
+    if (!include) {
+      const sql = `SELECT * FROM ${table} WHERE id=?;`;
+      connection.query(sql, [id], (error, results, fields) => {
+        if (error) throw error;
+        const row = {};
+        fields.map((field) => (row[field.name] = results[0][field.name]));
+        connection.end();
+        callback(row);
+      });
+    } else {
+      // SELECT * FROM demo.player JOIN demo.team ON demo.player.team_id=demo.team.id WHERE demo.player.id=8470686;
+      // SELECT * FROM (SELECT * FROM player WHERE player.id=8470686) as currentPlayer JOIN team ON currentPlayer.team_id=team.id;
+      const sql = `SELECT * FROM (SELECT id as playerId, birth_date, first_name, force_refresh, last_name, middle_name, position, team_id FROM demo.${table} WHERE player.id=?) as currentPlayer JOIN ${include} ON currentPlayer.team_id=team.id;`;
+      connection.query(sql, [id], (error, results, fields) => {
+        if (error) throw error;
+        const row = {};
+        fields.map((field) => {
+          if (field.orgTable === table) {
+            row[field.name] = results[0][field.name];
+          }
+          if (field.orgTable === include) {
+            if (row.team === undefined) {
+              row[include] = {};
+            }
+            row[include][field.name] = results[0][field.name];
+          }
+        });
+        connection.end();
+        callback(row);
+      });
+    }
   });
 };
 
