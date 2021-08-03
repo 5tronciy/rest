@@ -55,50 +55,18 @@ const getAll = (table, callback) => {
   });
 };
 
-const getById = (table, id, include, callback) => {
+const getById = (table, id, callback) => {
   const connection = mysql.createConnection(config.db);
   connection.connect((error) => {
     if (error) throw error;
-    if (!include) {
-      const sql = `SELECT * FROM ${table} WHERE id=?;`;
-      connection.query(sql, [id], (error, results, fields) => {
-        if (error) throw error;
-        const row = {};
-        fields.map((field) => (row[field.name] = results[0][field.name]));
-        connection.end();
-        callback(row);
-      });
-    } else {
-      const selectArray = [
-        "id as playerId",
-        "birth_date",
-        "first_name",
-        "force_refresh",
-        "last_name",
-        "middle_name",
-        "position",
-      ];
-      // SELECT * FROM demo.player JOIN demo.team ON demo.player.team_id=demo.team.id WHERE demo.player.id=8470686;
-      // SELECT * FROM (SELECT * FROM player WHERE player.id=8470686) as currentPlayer JOIN team ON currentPlayer.team_id=team.id;
-      const sql = `SELECT * FROM (SELECT ${selectArray.toString()}, ${include}_id FROM ${table} WHERE ${table}.id=?) as current JOIN ${include} ON current.${include}_id=${include}.id;`;
-      connection.query(sql, [id], (error, results, fields) => {
-        if (error) throw error;
-        const row = {};
-        fields.map((field) => {
-          if (field.orgTable === table) {
-            row[field.name] = results[0][field.name];
-          }
-          if (field.orgTable === include) {
-            if (row[include] === undefined) {
-              row[include] = {};
-            }
-            row[include][field.name] = results[0][field.name];
-          }
-        });
-        connection.end();
-        callback(row);
-      });
-    }
+    const sql = `SELECT * FROM ${table} WHERE id=?;`;
+    connection.query(sql, [id], (error, results, fields) => {
+      if (error) throw error;
+      const row = {};
+      fields.map((field) => (row[field.name] = results[0][field.name]));
+      connection.end();
+      callback(row);
+    });
   });
 };
 
