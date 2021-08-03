@@ -56,60 +56,67 @@ class Controller {
   getById(req, res) {
     try {
       const { table, id } = req.params;
-      getById(
-        table,
-        id,
-        req.query.include,
-        ({
-          playerId: id,
-          birth_date: birthDate,
-          first_name: firstName,
-          force_refresh: forceRefresh,
-          last_name: lastName,
-          middle_name: middleName,
-          position,
-          team: {
-            id: id1,
-            abbrev,
-            active,
-            common_name: commonName,
-            force_refresh: forceRefresh1,
-            full_name: fullName,
-            general_manager: generalManager,
-            location,
-          },
-          team_id,
-        }) => {
-          [forceRefresh, forceRefresh1, active] = [
-            forceRefresh,
-            forceRefresh1,
-            active,
-          ].map((item) => Boolean(item));
-          res.set("Content-Type", "application/json");
-          res.send(
-            JSON.stringify({
-              id,
-              birthDate,
-              firstName,
+      const include = req.query.include;
+      if (!include) {
+        getById(table, id, undefined, (row) => {
+          res.send(JSON.stringify(row));
+        });
+      } else {
+        getById(
+          table,
+          id,
+          include,
+          ({
+            playerId: id,
+            birth_date: birthDate,
+            first_name: firstName,
+            force_refresh: forceRefresh,
+            last_name: lastName,
+            middle_name: middleName,
+            position,
+            team: {
+              id: id1,
+              abbrev,
+              active,
+              common_name: commonName,
+              force_refresh: forceRefresh1,
+              full_name: fullName,
+              general_manager: generalManager,
+              location,
+            },
+            team_id,
+          }) => {
+            [forceRefresh, forceRefresh1, active] = [
               forceRefresh,
-              lastName,
-              middleName,
-              position,
-              team: {
-                id1,
-                abbrev,
-                active,
-                commonName,
-                forceRefresh1,
-                fullName,
-                generalManager,
-                location,
-              },
-              team_id,
-            })
-          );
-        }
-      );
+              forceRefresh1,
+              active,
+            ].map((item) => Boolean(item));
+            res.set("Content-Type", "application/json");
+            res.send(
+              JSON.stringify({
+                id,
+                birthDate,
+                firstName,
+                forceRefresh,
+                lastName,
+                middleName,
+                position,
+                team: {
+                  id1,
+                  abbrev,
+                  active,
+                  commonName,
+                  forceRefresh1,
+                  fullName,
+                  generalManager,
+                  location,
+                },
+                team_id,
+              })
+            );
+          }
+        );
+      }
     } catch (e) {
       res.status(500).json(e.message);
     }
