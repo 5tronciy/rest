@@ -6,6 +6,7 @@ const {
   create,
   updateById,
   deleteById,
+  getAllFilteredById,
 } = require("../services/db");
 
 class Controller {
@@ -57,20 +58,18 @@ class Controller {
     try {
       const { table, id } = req.params;
       const include = req.query.include;
-      if (!include) {
-        getById(table, id, (originalData) => {
-          res.set("Content-Type", "application/json");
-          res.send(JSON.stringify(originalData));
-        });
-      } else {
-        getById(table, id, (originalData) => {
-          getById(include, originalData[include + "_id"], (extraData) => {
-            const result = { ...originalData, [include]: extraData };
+      include
+        ? getById(table, id, (originalData) => {
+            getAllFilteredById(table, include, id, (extraData) => {
+              const result = { ...originalData, [include]: extraData };
+              res.set("Content-Type", "application/json");
+              res.send(JSON.stringify(result));
+            });
+          })
+        : getById(table, id, (originalData) => {
             res.set("Content-Type", "application/json");
-            res.send(JSON.stringify(result));
+            res.send(JSON.stringify(originalData));
           });
-        });
-      }
     } catch (e) {
       res.status(500).json(e.message);
     }
