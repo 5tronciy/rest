@@ -77,13 +77,11 @@ const create = (table, obj, callback) => {
     const template = [];
     const dataKeys = [];
     const dataValues = [];
-    // -?replace with reduce?-
     for (let key in obj) {
       template.push("?");
       dataKeys.push(key);
       dataValues.push(obj[key]);
     }
-    // -/?replace with reduce?-
     const sql = `INSERT INTO ${table} (${dataKeys.join(
       ", "
     )}) VALUES (${template.join(", ")});`;
@@ -128,6 +126,23 @@ const deleteById = (table, id, callback) => {
   });
 };
 
+const getAllFilteredById = (filterTable, table, filterId, callback) => {
+  const connection = mysql.createConnection(config.db);
+  connection.connect((error) => {
+    if (error) throw error;
+    const sql = `SELECT * FROM ${table} WHERE ${filterTable}_id = ?;`;
+    connection.query(sql, [filterId], (error, results) => {
+      if (error) throw error;
+      connection.end();
+      const rows = [];
+      for (let row in results) {
+        rows.push({ ...results[row] });
+      }
+      callback(rows);
+    });
+  });
+};
+
 module.exports = {
   getMetadata,
   getTableMetadata,
@@ -136,4 +151,5 @@ module.exports = {
   create,
   updateById,
   deleteById,
+  getAllFilteredById,
 };
