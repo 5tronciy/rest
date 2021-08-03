@@ -69,9 +69,18 @@ const getById = (table, id, include, callback) => {
         callback(row);
       });
     } else {
+      const selectArray = [
+        "id as playerId",
+        "birth_date",
+        "first_name",
+        "force_refresh",
+        "last_name",
+        "middle_name",
+        "position",
+      ];
       // SELECT * FROM demo.player JOIN demo.team ON demo.player.team_id=demo.team.id WHERE demo.player.id=8470686;
       // SELECT * FROM (SELECT * FROM player WHERE player.id=8470686) as currentPlayer JOIN team ON currentPlayer.team_id=team.id;
-      const sql = `SELECT * FROM (SELECT id as playerId, birth_date, first_name, force_refresh, last_name, middle_name, position, team_id FROM demo.${table} WHERE player.id=?) as currentPlayer JOIN ${include} ON currentPlayer.team_id=team.id;`;
+      const sql = `SELECT * FROM (SELECT ${selectArray.toString()}, ${include}_id FROM ${table} WHERE ${table}.id=?) as current JOIN ${include} ON current.${include}_id=${include}.id;`;
       connection.query(sql, [id], (error, results, fields) => {
         if (error) throw error;
         const row = {};
@@ -80,7 +89,7 @@ const getById = (table, id, include, callback) => {
             row[field.name] = results[0][field.name];
           }
           if (field.orgTable === include) {
-            if (row.team === undefined) {
+            if (row[include] === undefined) {
               row[include] = {};
             }
             row[include][field.name] = results[0][field.name];
@@ -100,11 +109,13 @@ const create = (table, obj, callback) => {
     const template = [];
     const dataKeys = [];
     const dataValues = [];
+    // -?replace with reduce?-
     for (let key in obj) {
       template.push("?");
       dataKeys.push(key);
       dataValues.push(obj[key]);
     }
+    // -/?replace with reduce?-
     const sql = `INSERT INTO ${table} (${dataKeys.join(
       ", "
     )}) VALUES (${template.join(", ")});`;
