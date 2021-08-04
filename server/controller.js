@@ -54,13 +54,21 @@ class Controller {
     include
       ? getById(table, id)
           .then((originalData) => {
-            getAllFilteredById(table, include, originalData.id)
-              .then((extraData) => {
-                const result = { ...originalData, [include]: extraData };
-                res.set("Content-Type", "application/json");
-                res.send(JSON.stringify(result));
-              })
-              .catch((e) => res.status(500).json(e));
+            originalData[include + "_id"]
+              ? getById(include, originalData[include + "_id"])
+                  .then((extraData) => {
+                    const result = { ...originalData, [include]: extraData };
+                    res.set("Content-Type", "application/json");
+                    res.send(JSON.stringify(result));
+                  })
+                  .catch((e) => res.status(500).json(e))
+              : getAllFilteredById(table, include, originalData.id)
+                  .then((extraData) => {
+                    const result = { ...originalData, [include]: extraData };
+                    res.set("Content-Type", "application/json");
+                    res.send(JSON.stringify(result));
+                  })
+                  .catch((e) => res.status(500).json(e));
           })
           .catch((e) => res.status(500).json(e.message))
       : getById(table, id)
