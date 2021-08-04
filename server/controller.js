@@ -20,97 +20,87 @@ class Controller {
   }
 
   getMetaData(req, res) {
-    try {
-      getMetadata((tables) => {
+    getMetadata()
+      .then((tables) => {
         res.set("Content-Type", "application/json");
         res.send(JSON.stringify(tables));
-      });
-    } catch (e) {
-      res.status(500).json(e.message);
-    }
+      })
+      .catch((e) => res.status(500).json(e.message));
   }
 
   getTableMetadata(req, res) {
-    try {
-      const { table } = req.params;
-      getTableMetadata(table, (metadata) => {
+    const { table } = req.params;
+    getTableMetadata(table)
+      .then((metadata) => {
         res.set("Content-Type", "application/json");
         res.send(JSON.stringify(metadata));
-      });
-    } catch (e) {
-      res.status(500).json(e.message);
-    }
+      })
+      .catch((e) => res.status(500).json(e.message));
   }
 
   getAll(req, res) {
-    try {
-      const { table } = req.params;
-      getAll(table, (data) => {
+    const { table } = req.params;
+    getAll(table)
+      .then((data) => {
         res.set("Content-Type", "application/json");
         res.send(JSON.stringify(data));
-      });
-    } catch (e) {
-      res.status(500).json(e.message);
-    }
+      })
+      .catch((e) => res.status(500).json(e.message));
   }
 
   getById(req, res) {
-    try {
-      const { table, id } = req.params;
-      const include = req.query.include;
-      include
-        ? getById(table, id, (originalData) => {
-            getAllFilteredById(table, include, id, (extraData) => {
-              const result = { ...originalData, [include]: extraData };
-              res.set("Content-Type", "application/json");
-              res.send(JSON.stringify(result));
-            });
+    const { table, id } = req.params;
+    const include = req.query.include;
+    include
+      ? getById(table, id)
+          .then((originalData) => {
+            getAllFilteredById(table, include, originalData.id)
+              .then((extraData) => {
+                const result = { ...originalData, [include]: extraData };
+                res.set("Content-Type", "application/json");
+                res.send(JSON.stringify(result));
+              })
+              .catch((e) => res.status(500).json(e));
           })
-        : getById(table, id, (originalData) => {
+          .catch((e) => res.status(500).json(e.message))
+      : getById(table, id)
+          .then((originalData) => {
             res.set("Content-Type", "application/json");
             res.send(JSON.stringify(originalData));
-          });
-    } catch (e) {
-      res.status(500).json(e.message);
-    }
+          })
+          .catch((e) => res.status(500).json(e.message));
   }
 
   create(req, res) {
-    try {
-      const { table } = req.params;
-      const obj = req.body;
-      create(table, obj, (id) => {
+    const { table } = req.params;
+    const obj = req.body;
+    create(table, obj)
+      .then((id) => {
         res.set("Content-Type", "text/plain");
         res.send(JSON.stringify(id));
-      });
-    } catch (e) {
-      res.status(500).json(e.message);
-    }
+      })
+      .catch((e) => res.status(500).json(e.message));
   }
 
   updateById(req, res) {
-    try {
-      const { table, id } = req.params;
-      const obj = req.body;
-      updateById(table, id, obj, (msg) => {
+    const { table, id } = req.params;
+    const obj = req.body;
+    updateById(table, id, obj)
+      .then((msg) => {
         res.set("Content-Type", "text/plain");
         res.send(JSON.stringify(msg));
-      });
-    } catch (e) {
-      res.status(500).json(e.message);
-    }
+      })
+      .catch((e) => res.status(500).json(e.message));
   }
 
   deleteById(req, res) {
-    try {
-      const { table, id } = req.params;
-      deleteById(table, id, (msg) => {
+    const { table, id } = req.params;
+    deleteById(table, id)
+      .then((msg) => {
         res.set("Content-Type", "text/plain");
         res.send(JSON.stringify(msg));
-      });
-    } catch (e) {
-      res.status(500).json(e.message);
-    }
+      })
+      .catch((e) => res.status(500).json(e.message));
   }
 }
 
