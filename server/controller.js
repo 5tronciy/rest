@@ -9,6 +9,20 @@ const {
   getAllFilteredById,
 } = require("../services/db");
 
+const addExtraData = (originalData, table, include) => {
+  return new Promise((resolve, reject) => {
+    Promise.resolve(
+      originalData[include + "_id"]
+        ? getById(include, originalData[include + "_id"])
+        : getAllFilteredById(table, include, originalData.id)
+    )
+      .then((extraData) => {
+        resolve({ ...originalData, [include]: extraData });
+      })
+      .catch((e) => console.log(e));
+  });
+};
+
 class Controller {
   start(req, res) {
     try {
@@ -51,32 +65,87 @@ class Controller {
   getById(req, res) {
     const { table, id } = req.params;
     const include = req.query.include;
-    include
-      ? getById(table, id)
-          .then((originalData) => {
-            originalData[include + "_id"]
-              ? getById(include, originalData[include + "_id"])
-                  .then((extraData) => {
-                    const result = { ...originalData, [include]: extraData };
+    if (include) {
+      switch (typeof include) {
+        case "string":
+          getById(table, id)
+            .then((originalData) => {
+              addExtraData(originalData, table, include).then((data) => {
+                res.set("Content-Type", "application/json");
+                res.send(JSON.stringify(data));
+              });
+            })
+            .catch((e) => res.status(500).json(e.message));
+          break;
+        case "object":
+          const chain = include[1].split(".");
+          getById(table, id).then((originalData) => {
+            getById(chain[0], originalData[chain[0] + "_id"]).then(
+              (extraData) => {
+                console.log(extraData);
+                addExtraData(extraData, chain[0], chain[1]).then(
+                  (extraData) => {
+                    const result = { ...originalData, [include[0]]: extraData };
                     res.set("Content-Type", "application/json");
                     res.send(JSON.stringify(result));
-                  })
-                  .catch((e) => res.status(500).json(e))
-              : getAllFilteredById(table, include, originalData.id)
-                  .then((extraData) => {
-                    const result = { ...originalData, [include]: extraData };
-                    res.set("Content-Type", "application/json");
-                    res.send(JSON.stringify(result));
-                  })
-                  .catch((e) => res.status(500).json(e));
-          })
-          .catch((e) => res.status(500).json(e.message))
-      : getById(table, id)
-          .then((originalData) => {
-            res.set("Content-Type", "application/json");
-            res.send(JSON.stringify(originalData));
-          })
-          .catch((e) => res.status(500).json(e.message));
+                  }
+                );
+              }
+            );
+          });
+          break;
+        // } else{
+
+        // }
+        // }
+        //   getById(table, id)
+        //     .then((originalData) => {
+        //       if (originalData[include[0] + "_id"]) {
+        //         getById(include[0], originalData[include[0] + "_id"])
+        //           .then((extraData) => {
+        //             const result = { ...originalData, [include[0]]: extraData };
+        //             res.set("Content-Type", "application/json");
+        //             res.send(JSON.stringify(result));
+        //           })
+        //           .then(getAllFilteredById(table, include[0], originalData.id))
+        //           // .then(
+        //           //   getById(
+        //           //     include[1],
+        //           //     originalData[include[0] + "_id"][include[1] + "_id"]
+        //           //   )
+        //           // )
+        //           .then((extraExtraData) => {
+        //             const result = {
+        //               ...originalData,
+        //               ...extraData,
+        //               [include[1]]: extraExtraData,
+        //             };
+        //             res.set("Content-Type", "application/json");
+        //             res.send(JSON.stringify(result));
+        //           })
+        //           .catch((e) => res.status(500).json(e));
+        //       } else {
+        //         getAllFilteredById(table, include[0], originalData.id)
+        //           .then((extraData) => {
+        //             const result = { ...originalData, [include[0]]: extraData };
+        //             res.set("Content-Type", "application/json");
+        //             res.send(JSON.stringify(result));
+        //           })
+        //           .catch((e) => res.status(500).json(e));
+        //       }
+        //     })
+        //     .catch((e) => res.status(500).json(e.message));
+        default:
+          console.log("Unexpected type of include: " + typeof include);
+      }
+    } else {
+      getById(table, id)
+        .then((originalData) => {
+          res.set("Content-Type", "application/json");
+          res.send(JSON.stringify(originalData));
+        })
+        .catch((e) => res.status(500).json(e.message));
+    }
   }
 
   create(req, res) {
