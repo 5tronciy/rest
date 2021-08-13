@@ -9,46 +9,37 @@ const {
   getAllFilteredById,
 } = require("../services/db");
 
-const addExtraData = (object, table, include) => {
-  return new Promise((resolve, reject) => {
-    const chain = include.split(".");
-    Promise.resolve(
-      object[chain[0] + "_id"]
-        ? getById(chain[0], object[chain[0] + "_id"])
-        : getAllFilteredById(table, chain[0], object.id)
-    )
+const addExtraData = (object, include, table) => {
+  if (include && include[0]) {
+    const chain = include[0].split(".");
+
+    const addExtra = () => {
+      if (object[chain[0] + "_id"]) {
+        return getById(chain[0], object[chain[0] + "_id"]);
+      } else {
+        return getAllFilteredById(table, chain[0], object.id);
+      }
+    };
+
+    const nextNest = (extraData) => {
+      const nesting = [chain.slice(1).join(".")];
+      if (extraData.length) {
+        return Promise.all(
+          extraData.map((data) => addExtraData(data, nesting, chain[0]))
+        );
+      } else {
+        return addExtraData(extraData, nesting, chain[0]);
+      }
+    };
+
+    return addExtra()
+      .then((extraData) => nextNest(extraData))
       .then((extraData) => {
-        if (chain.length === 1) {
-          resolve({ ...object, [chain[0]]: extraData });
-        } else {
-          const nesting = chain.slice(1).join(".");
-          const result = { ...object, [chain[0]]: extraData };
-          if (extraData.length) {
-            const results = [];
-            for (let i = 0; i < extraData.length; i++) {
-              results.push(
-                addExtraData(extraData[i], chain[i], nesting).then((d) => {
-                  result[chain[0]][i] = d;
-                })
-              );
-            }
-            Promise.all(results).then(() => {
-              resolve(result);
-            });
-          } else {
-            addExtraData(extraData, chain[0], nesting)
-              .then((d) => {
-                result[chain[0]] = d;
-                return result;
-              })
-              .then((result) => {
-                resolve(result);
-              });
-          }
-        }
-      })
-      .catch((e) => reject(e));
-  });
+        return { ...object, [chain[0]]: extraData };
+      });
+  } else {
+    return Promise.resolve(object);
+  }
 };
 
 class Controller {
@@ -92,44 +83,17 @@ class Controller {
 
   getById(req, res) {
     const { table, id } = req.params;
-    const include = req.query.include;
-    if (include) {
-      switch (typeof include) {
-        case "string":
-          getById(table, id)
-            .then((originalData) => {
-              addExtraData(originalData, table, include).then((data) => {
-                res.set("Content-Type", "application/json");
-                res.send(JSON.stringify(data));
-              });
-            })
-            .catch((e) => res.status(500).json(e.message));
-          break;
-        case "object":
-          getById(table, id)
-            .then((originalData) => {
-              const results = [];
-              for (let i = 0; i < include.length; i++) {
-                results.push(addExtraData(originalData, table, include[i]));
-              }
-              Promise.all(results).then((data) => {
-                res.set("Content-Type", "application/json");
-                res.send(JSON.stringify(data));
-              });
-            })
-            .catch((e) => res.status(500).json(e.message));
-          break;
-        default:
-          console.log("Unexpected type of include: " + typeof include);
-      }
-    } else {
-      getById(table, id)
-        .then((originalData) => {
-          res.set("Content-Type", "application/json");
-          res.send(JSON.stringify(originalData));
-        })
-        .catch((e) => res.status(500).json(e.message));
-    }
+    const include =
+      typeof req.query.include === "string"
+        ? [req.query.include]
+        : req.query.include;
+    getById(table, id)
+      .then((data) => addExtraData(data, include, table))
+      .then((data) => {
+        res.set("Content-Type", "application/json");
+        res.send(JSON.stringify(data));
+      })
+      .catch((e) => res.status(500).json(e.message));
   }
 
   create(req, res) {
