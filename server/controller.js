@@ -12,7 +12,6 @@ const {
 const addExtraData = (object, include, table) => {
   if (include && include[0]) {
     const chain = include[0].split(".");
-
     const addExtra = () => {
       if (object[chain[0] + "_id"]) {
         return getById(chain[0], object[chain[0] + "_id"]);
@@ -36,6 +35,11 @@ const addExtraData = (object, include, table) => {
       .then((extraData) => nextNest(extraData))
       .then((extraData) => {
         return { ...object, [chain[0]]: extraData };
+      })
+      .then((object) => {
+        return include[1]
+          ? addExtraData(object, include.splice(1), table)
+          : object;
       });
   } else {
     return Promise.resolve(object);
