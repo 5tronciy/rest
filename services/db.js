@@ -78,6 +78,30 @@ const getById = (table, id) => {
   });
 };
 
+const getReferencedTableAndColumn = (table, column) => {
+  return new Promise((resolve, reject) => {
+    const connection = mysql.createConnection(config.db);
+    connection.connect((error) => {
+      if (error) reject(error);
+      const sql = `SELECT
+                    REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME
+                  FROM
+                    INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+                  WHERE
+                    TABLE_NAME = '${table}' AND
+                    COLUMN_NAME = '${column}';`;
+      connection.query(sql, (error, results, fields) => {
+        if (error) reject(error);
+        connection.end();
+        resolve([
+          results[0].REFERENCED_TABLE_NAME,
+          results[0].REFERENCED_COLUMN_NAME,
+        ]);
+      });
+    });
+  });
+};
+
 const create = (table, obj) => {
   return new Promise((resolve, reject) => {
     const connection = mysql.createConnection(config.db);
@@ -164,6 +188,7 @@ module.exports = {
   getTableMetadata,
   getAll,
   getById,
+  getReferencedTableAndColumn,
   create,
   updateById,
   deleteById,
