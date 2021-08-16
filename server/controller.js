@@ -3,6 +3,7 @@ const {
   getTableMetadata,
   getAll,
   getById,
+  getReferencedTableAndColumn,
   create,
   updateById,
   deleteById,
@@ -13,11 +14,13 @@ const addExtraData = (object, include, table) => {
   if (include && include[0]) {
     const chain = include[0].split(".");
     const addExtra = () => {
-      if (object[chain[0] + "_id"]) {
-        return getById(chain[0], object[chain[0] + "_id"]);
-      } else {
-        return getAllFilteredById(table, chain[0], object.id);
-      }
+      return getReferencedTableAndColumn(table, chain[0]).then((data) => {
+        if (object[chain[0] + "_id"]) {
+          return getById(data[0], object[chain[0] + "_id"]);
+        } else {
+          return getAllFilteredById(table, chain[0], object.id);
+        }
+      });
     };
 
     const nextNest = (extraData) => {
