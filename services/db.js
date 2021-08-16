@@ -93,10 +93,14 @@ const getReferencedTableAndColumn = (table, column) => {
       connection.query(sql, (error, results, fields) => {
         if (error) reject(error);
         connection.end();
-        resolve([
-          results[0].REFERENCED_TABLE_NAME,
-          results[0].REFERENCED_COLUMN_NAME,
-        ]);
+        if (results[0]) {
+          resolve([
+            results[0].REFERENCED_TABLE_NAME,
+            results[0].REFERENCED_COLUMN_NAME,
+          ]);
+        } else {
+          resolve(null);
+        }
       });
     });
   });
