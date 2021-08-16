@@ -89,7 +89,7 @@ const getReferencedTableAndColumn = (table, column) => {
                     INFORMATION_SCHEMA.KEY_COLUMN_USAGE
                   WHERE
                     TABLE_NAME = '${table}' AND
-                    COLUMN_NAME = '${column}';`;
+                    COLUMN_NAME = '${column}_id';`;
       connection.query(sql, (error, results, fields) => {
         if (error) reject(error);
         connection.end();
@@ -99,7 +99,25 @@ const getReferencedTableAndColumn = (table, column) => {
             results[0].REFERENCED_COLUMN_NAME,
           ]);
         } else {
-          resolve(null);
+          const connection = mysql.createConnection(config.db);
+          connection.connect((error) => {
+            if (error) reject(error);
+            const sql = `SELECT
+                           REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME
+                        FROM
+                          INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+                        WHERE
+                          REFERENCED_TABLE_NAME = '${table}' AND
+                          TABLE_NAME = '${column}';`;
+            connection.query(sql, (error, results, fields) => {
+              if (error) reject(error);
+              connection.end();
+              resolve([
+                results[0].REFERENCED_TABLE_NAME,
+                results[0].REFERENCED_COLUMN_NAME,
+              ]);
+            });
+          });
         }
       });
     });
