@@ -93,7 +93,7 @@ const getReferencedTableAndColumn = (table, column) => {
       connection.query(sql, (error, results, fields) => {
         if (error) reject(error);
         connection.end();
-        if (results[0]) {
+        if (results && results[0]) {
           resolve([
             results[0].REFERENCED_TABLE_NAME,
             results[0].REFERENCED_COLUMN_NAME,
