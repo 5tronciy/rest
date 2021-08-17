@@ -49,6 +49,24 @@ const addExtraData = (object, include, table) => {
   }
 };
 
+const addExtraDataToArray = (array, include, table) => {
+  if (include && include[0]) {
+    const addExtra = () => {
+      return Promise.all(
+        array.map((data) => addExtraData(data, include, table))
+      );
+    };
+
+    return addExtra().then((object) => {
+      return include[1]
+        ? addExtraData(object, include.splice(1), table)
+        : object;
+    });
+  } else {
+    return Promise.resolve(array);
+  }
+};
+
 class Controller {
   start(req, res) {
     try {
@@ -80,7 +98,12 @@ class Controller {
 
   getAll(req, res) {
     const { table } = req.params;
+    const include =
+      typeof req.query.include === "string"
+        ? [req.query.include]
+        : req.query.include;
     getAll(table)
+      .then((data) => addExtraDataToArray(data, include, table))
       .then((data) => {
         res.set("Content-Type", "application/json");
         res.send(JSON.stringify(data));
