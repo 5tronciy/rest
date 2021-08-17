@@ -10,6 +10,9 @@ const {
   getAllFilteredById,
 } = require("../services/db");
 
+const compare = (a, b) =>
+  a.length > b.length ? 1 : a.length == b.length ? 0 : -1;
+
 const addExtraData = (object, include, table) => {
   if (include && include[0]) {
     const chain = include[0].split(".");
@@ -117,8 +120,21 @@ class Controller {
       typeof req.query.include === "string"
         ? [req.query.include]
         : req.query.include;
+    const filteredInclude = include
+      .filter((item) => {
+        let count = 0;
+        for (let str of include) {
+          if (str.indexOf(item) === 0) {
+            count += 1;
+          }
+        }
+        if (count === 1) {
+          return item;
+        }
+      })
+      .sort(compare);
     getById(table, id)
-      .then((data) => addExtraData(data, include, table))
+      .then((data) => addExtraData(data, filteredInclude, table))
       .then((data) => {
         res.set("Content-Type", "application/json");
         res.send(JSON.stringify(data));
